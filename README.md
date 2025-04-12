@@ -3,6 +3,7 @@
 
 ## Integrantes
 
+Juan Sebastian Alvarez M
 
 ## Documentación
 
