@@ -1,0 +1,54 @@
+1. Arquitectura del Sistema
+  
+El código implementa un sistema embebido de adquisición y visualización de datos térmicos mediante un paradigma orientado a objetos. 
+La clase MonitorTemperaturaRPI encapsula la lógica funcional bajo los principios de cohesión modular y bajo acoplamiento, permitiendo su integración en sistemas complejos.
+
+2. Bibliotecas Utilizadas: 
+
+matplotlib.pyplot: Framework gráfico para renderizado dinámico de datos en cordenadas Cartesianas.
+subprocess: Mecanismo de comunicación interprocesos para ejecución de instrucciones a nivel de kernel (comando vcgencmd).
+csv: Protocolo de serialización para almacenamiento estructurado en formato tabular.
+time: Módulo de gestión de eventos temporales para sincronización de muestreo.
+
+3. 
+3.1 Diseño de Clase MonitorTemperaturaRPI
+Constructor (__init__)
+Inicialización de Parámetros:
+duracion_max: Configura el horizonte temporal de visualización (ventana de datos).
+intervalo: Define la frecuencia de muestreo mediante técnicas de polling.
+archivo_salida: Establece la ruta de persistencia de datos en formato CSV.
+Configuración de Entorno Gráfico: Inicializa figura con modo interactivo (plt.ion()) para actualizaciones asíncronas.  Genera archivo CSV con cabecera estándar (tiempo, temperatura).
+  
+3.2 Método leer_temperatura()
+Adquisición de Datos:
+Ejecuta comando de bajo nivel vcgencmd measure_temp mediante subsistema de procesos.Implementa procesamiento de cadenas (regex implícito) para extracción de valores numéricos.Retorna valor térmico como punto flotante en escala Celsius. Gestión de Excepciones:Captura CalledProcessError y ValueError para garantizar continuidad operativa.
+  
+3.3 Método guardar_en_csv(tiempo, temperatura)
+Persistencia de Datos:
+Utiliza escritura en modo append con delimitadores CSV.
+Implementa buffer de escritura automático para prevenir pérdida de datos por interrupciones.
+
+3.4 Método actualizar_datos()
+Lógica de Control:
+Actualiza buffers circulares (self.tiempos, self.temperaturas).
+Aplica truncamiento FIFO para optimizar uso de memoria cuando len(tiempos) > duracion_max/intervalo.
+Invoca método de persistencia (guardar_en_csv).
+
+3.5 Método graficar()
+Renderizado Dinámico:
+Limpia eje X-Y previo (self.ax.clear()) para evitar superposición de trazos.
+Configura propiedades gráficas: etiquetas, cuadrícula y título.
+Emplea canvas.draw() y canvas.flush_events() para actualización de ventana sin bloqueo.
+
+3.6 Método ejecutar()
+Bucle Principal:
+Sincroniza adquisición, procesamiento y visualización mediante time.sleep(intervalo).
+Implementa manejo de KeyboardInterrupt para terminación segura.
+Libera recursos gráficos (plt.ioff(), plt.close()) post-ejecución.
+
+4. Estrategias de Optimización
+Muestreo No Bloqueante: Uso de plt.ion() evita congestionamiento en hilo principal.
+Gestión de Memoria: Buffer circular elimina datos históricos fuera de la ventana de visualización.
+Integridad de Datos: Escritura inmediata en CSV previene corrupción por fallos energéticos.
+
+
